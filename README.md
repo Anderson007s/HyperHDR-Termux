@@ -1,0 +1,1 @@
+# HyperHDR no Termux
