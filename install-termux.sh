@@ -1,81 +1,81 @@
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/Anderson007s/HyperHDR-Termux.git}"
-TARGET_DIR="${TARGET_DIR:-$HOME/HyperHDR-Termux}"
-PREFIX_BIN="/data/data/com.termux/files/usr/bin"
-CMD_LINK="$PREFIX_BIN/hyperhdr-termux"
+# HyperHDR-Termux installer for Termux (HEADLESS / NO QT)
+# Author: Anderson Carlos
+#
+# Fixes:
+#  - Avoids qt5-base / qt5-tools / qt5-serialport
+#  - Uses headless build (Qt disabled)
+#  - Disables SPI providers (ProviderSpiGeneric link errors)
+#  - Works with modern CMake on Termux
 
-ts() { date +"%Y%m%d-%H%M%S"; }
+REPO_URL="https://github.com/andersoncarlos/HyperHDR-Termux.git"
+PROJECT_DIR="$HOME/HyperHDR-Termux"
 
-echo "[*] HyperHDR Termux Installer"
-echo "    Repo:   $REPO_URL"
-echo "    Pasta:  $TARGET_DIR"
-echo
-
-# 0) Backup/limpeza de instalação antiga
-if [ -d "$TARGET_DIR" ]; then
-  BACKUP_DIR="${TARGET_DIR}.backup.$(ts)"
-  echo "[*] Instalacao anterior encontrada."
-  echo "    Movendo para backup: $BACKUP_DIR"
-  mv "$TARGET_DIR" "$BACKUP_DIR"
-fi
-
-# Remove comando global antigo se existir
-if [ -L "$CMD_LINK" ] || [ -f "$CMD_LINK" ]; then
-  echo "[*] Removendo comando antigo: $CMD_LINK"
-  rm -f "$CMD_LINK"
-fi
-
-# 1) Atualizar Termux e instalar dependencias (somente o essencial)
-echo "[*] Atualizando pacotes..."
+echo "[*] Updating Termux packages..."
 pkg update -y && pkg upgrade -y
 
-echo "[*] Instalando dependencias essenciais..."
-pkg install -y git cmake ninja clang make pkg-config binutils || true
+echo "[*] Installing build dependencies (Qt disabled)..."
 
-# (Opcional) acesso ao armazenamento (não falha se usuário negar)
-if [ ! -d "$HOME/storage" ]; then
-  echo "[i] (Opcional) Configurando acesso ao armazenamento: termux-setup-storage"
-  termux-setup-storage >/dev/null 2>&1 || true
+PKGS=(
+  git
+  cmake
+  ninja
+  make
+  clang
+  pkg-config
+  python
+  perl
+  openssl
+  zlib
+  libusb
+  ffmpeg
+  libjpeg-turbo
+  libpng
+  freetype
+  harfbuzz
+  binutils
+)
+
+MISSING=()
+
+for p in "${PKGS[@]}"; do
+  echo "  - $p"
+  if ! pkg install -y "$p"; then
+    echo "    [!] Failed to install: $p (continuing)"
+    MISSING+=("$p")
+  fi
+done
+
+echo
+echo "[*] Cloning or updating HyperHDR-Termux..."
+
+if [[ -d "$PROJECT_DIR/.git" ]]; then
+  echo "  - Repository exists, pulling latest changes..."
+  git -C "$PROJECT_DIR" pull --rebase
+else
+  git clone --depth=1 "$REPO_URL" "$PROJECT_DIR"
 fi
 
-# 2) Clonar repo
-echo "[*] Clonando repositorio..."
-git clone --depth=1 "$REPO_URL" "$TARGET_DIR"
+echo
+echo "[*] Building HyperHDR (headless)..."
+cd "$PROJECT_DIR"
 
-cd "$TARGET_DIR"
-
-# 3) Permissoes
-echo "[*] Ajustando permissoes..."
-chmod +x ./*.sh 2>/dev/null || true
-find . -type f -name "*.sh" -exec chmod +x {} \; || true
-
-# 4) Build
-if [ -f "./build.sh" ]; then
-  echo "[*] Compilando (./build.sh)..."
-  ./build.sh
-else
-  echo "[ERRO] build.sh nao encontrado no repositorio."
-  echo "       Verifique se o GitHub tem build.sh na raiz."
+if [[ ! -x "./build.sh" ]]; then
+  echo "[!] build.sh not found or not executable."
+  echo "    Make sure build.sh exists in the repository."
   exit 1
 fi
 
-# 5) Criar comando global que roda de QUALQUER pasta
-echo "[*] Criando comando global: hyperhdr-termux"
-cat > "$CMD_LINK" <<EOF
-#!/data/data/com.termux/files/usr/bin/bash
-set -e
-DIR="$TARGET_DIR"
-exec "\$DIR/run-hyperhdr.sh"
-EOF
-chmod +x "$CMD_LINK"
+./build.sh clean
 
 echo
-echo "[OK] Instalacao finalizada!"
-echo "[*] Para rodar de qualquer lugar:"
-echo "    hyperhdr-termux"
-echo
-echo "[*] Para rodar pela pasta do projeto:"
-echo "    cd $TARGET_DIR && ./run-hyperhdr.sh"
+echo "[*] HyperHDR-Termux installation completed successfully."
 
+if (( ${#MISSING[@]} > 0 )); then
+  echo
+  echo "[!] Some packages failed to install:"
+  printf ' - %s\n' "${MISSING[@]}"
+  echo "    Tip: run 'termux-change-repo' and choose a fast mirror."
+fi

@@ -1,33 +1,75 @@
-
+cat > build.sh <<'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+# HyperHDR-Termux build helper (headless)
+# Fix: disable SPI providers to avoid ProviderSpiGeneric undefined symbols
+# Also: CMake compatibility fix for old subprojects
+#
+# Usage:
+#   ./build.sh          # build (incremental)
+#   ./build.sh clean    # wipe build dir and rebuild
+#   ./build.sh run      # build + run hyperhdr (if present)
 
-echo "[*] Instalando dependências (Termux)..."
-pkg update -y
-pkg install -y git cmake ninja clang make pkg-config \
-  qt5-base qt5-tools qt5-serialport \
-  openssl zstd sqlite libjpeg-turbo
+MODE="${1:-build}"
 
-echo "[*] Preparando build..."
-rm -rf build
-mkdir -p build
-cd build
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUILD_DIR="${ROOT_DIR}/build"
 
-echo "[*] Configurando CMake..."
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release \
-  -DENABLE_SPIDEV=OFF \
-  -DENABLE_SPI_FTDI=OFF \
-  -DENABLE_WS281XPWM=OFF \
-  -DENABLE_RPI_WS281X=OFF \
-  -DENABLE_V4L2=OFF \
-  -DENABLE_PIPEWIRE=OFF \
+need_pkg() {
+  command -v "$1" >/dev/null 2>&1 || {
+    echo "Missing command: $1"
+    echo "Install with: pkg install -y $2"
+    exit 1
+  }
+}
+
+need_pkg cmake cmake
+need_pkg ninja ninja
+need_pkg clang clang
+need_pkg pkg-config pkg-config
+
+if [[ "$MODE" == "clean" ]]; then
+  echo "[*] Cleaning build dir..."
+  rm -rf "$BUILD_DIR"
+fi
+
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
+
+echo "[*] Configuring (Release, headless, SPI disabled)..."
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+  -DENABLE_QT=OFF -DENABLE_QT5=OFF \
   -DENABLE_X11=OFF \
-  -DENABLE_FRAMEBUFFER=OFF
+  -DENABLE_SPIDEV=OFF \
+  -DENABLE_SPI_FTDI=OFF
 
-echo "[*] Compilando..."
+echo "[*] Building..."
 ninja -j"$(nproc)"
 
-echo "[OK] Build finalizado: $SCRIPT_DIR/build/bin/hyperhdr"
+echo "[*] Build finished."
+
+if [[ "$MODE" == "run" ]]; then
+  # Try common output locations
+  BIN_CANDIDATES=(
+    "$BUILD_DIR/bin/hyperhdr"
+    "$BUILD_DIR/hyperhdr"
+    "$BUILD_DIR/bin/hyperhdrd"
+    "$BUILD_DIR/hyperhdrd"
+  )
+
+  for b in "${BIN_CANDIDATES[@]}"; do
+    if [[ -x "$b" ]]; then
+      echo "[*] Running: $b"
+      exec "$b"
+    fi
+  done
+
+  echo "[!] Built successfully, but couldn't find an executable to run."
+  echo "    Check build output under: $BUILD_DIR"
+fi
+EOF
+
+chmod +x build.sh
