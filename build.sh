@@ -36,6 +36,12 @@ fi
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
+FLATC_PATH="$(command -v flatc || true)"
+if [[ -z "$FLATC_PATH" ]]; then
+  echo "[!] flatc not found in PATH. Install it with: pkg install -y flatbuffers"
+  exit 1
+fi
+
 echo "[*] Configuring (Release, headless, SPI disabled)..."
 cmake .. -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
@@ -49,7 +55,7 @@ cmake .. -G Ninja \
   -DENABLE_X11=OFF \
   -DENABLE_SYSTRAY=OFF \
   -DUSE_SYSTEM_FLATBUFFERS_LIBS=ON \
-  -DFLATBUFFERS_FLATC_EXECUTABLE="$(which flatc)" \
+  -DFLATBUFFERS_FLATC_EXECUTABLE:FILEPATH="$FLATC_PATH" \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 echo "[*] Building..."
 ninja -j"$(nproc)"

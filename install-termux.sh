@@ -55,6 +55,14 @@ if pkg search qt6-qtconnectivity >/dev/null 2>&1; then
 fi
 
 echo
+pkg install -y flatbuffers
+
+if ! command -v flatc >/dev/null 2>&1; then
+  echo "[!] flatc not found after installing flatbuffers."
+  echo "    Try: pkg search flatc && pkg search flatbuffers"
+  exit 1
+fi
+
 echo "[*] Cloning or updating HyperHDR-Termux..."
 if [[ -d "$PROJECT_DIR/.git" ]]; then
   echo "  - Repository exists, pulling latest changes..."
