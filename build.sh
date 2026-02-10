@@ -39,12 +39,18 @@ cd "$BUILD_DIR"
 echo "[*] Configuring (Release, headless, SPI disabled)..."
 cmake .. -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-  -DENABLE_QT=OFF -DENABLE_QT5=OFF \
-  -DENABLE_X11=OFF \
+  -DCMAKE_PREFIX_PATH="$PREFIX" \
+  -DQt6_DIR="$PREFIX/lib/cmake/Qt6" \
+  -DPLATFORM=linux \
+  -DDO_NOT_USE_QT_VERSION_6_LIBS=OFF \
+  -DENABLE_WS281XPWM=OFF \
   -DENABLE_SPIDEV=OFF \
-  -DENABLE_SPI_FTDI=OFF
-
+  -DENABLE_SPI_FTDI=OFF \
+  -DENABLE_X11=OFF \
+  -DENABLE_SYSTRAY=OFF \
+  -DUSE_SYSTEM_FLATBUFFERS_LIBS=ON \
+  -DFLATBUFFERS_FLATC_EXECUTABLE="$(which flatc)" \
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 echo "[*] Building..."
 ninja -j"$(nproc)"
 

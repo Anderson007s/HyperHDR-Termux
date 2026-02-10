@@ -215,12 +215,16 @@ if (NOT USE_SYSTEM_FLATBUFFERS_LIBS OR CMAKE_CROSSCOMPILING)
 		endif()
 	endif()
 
-	file(RENAME "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git" "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git.hidden")
 
-	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers)
+        if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git")
+          file(RENAME "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git" "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git.hidden")
+           endif()
 
-	file(RENAME "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git.hidden" "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git")
+        add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers)
 
+        if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git.hidden")
+         file(RENAME "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git.hidden" "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/.git")
+         endif()
 	set(FLATBUFFERS_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/flatbuffers/include")
 
 	IF (NOT CMAKE_CROSSCOMPILING)
