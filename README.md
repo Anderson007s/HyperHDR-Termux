@@ -1,61 +1,52 @@
-# HyperHDR no Termux – Instalação
+# HyperHDR-Termux
 
+Build e execução do HyperHDR no **Termux** (Android) em modo **headless** (sem Qt/GUI).
 
-## 1. Copiar o backup
+## Requisitos
+- Termux atualizado
 
-Transfira o arquivo do projeto (`HyperHDR-Termux.tar.gz`) para o novo dispositivo.  
-Exemplo: o arquivo foi salvo em `~/storage/downloads/HyperHDR-Termux.tar.gz`.
-
-## 2. Extrair o Arquivo
-
-Abra o Termux no dispositivo e execute:
-
+## Instalação (Termux)
+1) Clone o repositório:
 ```bash
-# Vá para a pasta onde salvou o backup
-cd ~/storage/downloads
-
-# Extraia o arquivo
-tar -xzvf HyperHDR-Termux.tar.gz
-
-# Entre na pasta do projeto
+git clone https://github.com/andersoncarlos/HyperHDR-Termux.git
 cd HyperHDR-Termux
 ```
 
-## 3. Dar permissões aos scripts
-
-Para garantir que os scripts possam ser executados:
-
+2) Rode o instalador do Termux:
 ```bash
-# Torna todos os scripts .sh executáveis
-chmod +x *.sh
-
-# Aplica recursivamente em todos os subdiretórios
-find . -type f -name "*.sh" -exec chmod +x {} \;
+chmod +x install-termux.sh
+./install-termux.sh
 ```
 
-## 4. Instalar dependências (se necessário)
-
-Antes de compilar, certifique-se de que o Termux tem os pacotes essenciais:
-
+## Build manual
+Se quiser compilar manualmente:
 ```bash
-pkg update && pkg upgrade -y
-pkg install git cmake build-essential clang make -y
+./build.sh clean
 ```
 
-## 5. Compilar o HyperHDR
-
-No diretório do projeto:
-
+## Rodar (Termux)
+Rodar em foreground (debug):
 ```bash
-./build.sh
+./run-hyperhdr.sh fg
 ```
 
-Aguarde até a compilação terminar.
-
-## 6. Executar o HyperHDR
-
-Para iniciar o HyperHDR:
-
+Rodar em background:
 ```bash
-./run-hyperhdr.sh
+./run-hyperhdr.sh bg
 ```
+
+Logs:
+```bash
+./run-hyperhdr.sh logs
+```
+
+Parar:
+```bash
+./run-hyperhdr.sh stop
+```
+
+
+## Acesso Web UI
+Normalmente:
+http://127.0.0.1:8090�
+Ou use o IP do aparelho na rede (ex.: http://SEU_IP:8090).
