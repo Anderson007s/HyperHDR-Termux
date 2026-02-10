@@ -47,11 +47,6 @@ chmod +x install-termux.sh
 
 
 ## ▶️ Executar o HyperHDR
-```bash
-./build/bin/hyperhdr
-```
-
-## Rodar (Termux)
 
 Rodar em background:
 ```bash
