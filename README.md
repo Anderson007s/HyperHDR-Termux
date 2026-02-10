@@ -66,5 +66,5 @@ Parar:
 
 ## Acesso Web UI
 Normalmente:
-http://127.0.0.1:8090�
+http://127.0.0.1:8090
 Ou use o IP do aparelho na rede (ex.: http://SEU_IP:8090).
