@@ -1,4 +1,3 @@
-cat > build.sh <<'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 
@@ -70,6 +69,3 @@ if [[ "$MODE" == "run" ]]; then
   echo "[!] Built successfully, but couldn't find an executable to run."
   echo "    Check build output under: $BUILD_DIR"
 fi
-EOF
-
-chmod +x build.sh
