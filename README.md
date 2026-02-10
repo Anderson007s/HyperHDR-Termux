@@ -8,7 +8,7 @@ Build e execução do HyperHDR no **Termux** (Android) em modo **headless** (sem
 ## Instalação (Termux)
 1) Clone o repositório:
 ```bash
-git clone https://github.com/andersoncarlos/HyperHDR-Termux.git
+git clone https://github.com/Anderson007s/HyperHDR-Termux.git
 cd HyperHDR-Termux
 ```
 
