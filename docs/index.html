@@ -1,46 +1,333 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HyperHDR-Termux</title>
+  <meta name="description" content="Instale e rode o HyperHDR no Termux (Android) com scripts prontos." />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #eee;
-      text-align: center;
-      padding: 40px;
+    :root{
+      --bg: #0b1020;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.08);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --border: rgba(255,255,255,.12);
+      --accent: #00ffd0;
+      --accent2:#6ea8ff;
+      --shadow: 0 18px 55px rgba(0,0,0,.35);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
-    h1 {
-      color: #00ffcc;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(0,255,208,.15), transparent 55%),
+        radial-gradient(1000px 500px at 100% 25%, rgba(110,168,255,.18), transparent 55%),
+        radial-gradient(900px 500px at 50% 100%, rgba(0,255,208,.10), transparent 65%),
+        var(--bg);
+      min-height:100vh;
     }
-    a {
-      color: #00ffcc;
-      text-decoration: none;
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 44px}
+    .hero{
+      border:1px solid var(--border);
+      border-radius:calc(var(--radius) + 6px);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow:var(--shadow);
+      padding:26px;
+      overflow:hidden;
+      position:relative;
     }
+    .hero:before{
+      content:"";
+      position:absolute;inset:-2px;
+      background:radial-gradient(600px 200px at 30% 0%, rgba(0,255,208,.22), transparent 60%);
+      pointer-events:none;
+    }
+    .top{
+      display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;
+      position:relative;
+    }
+    .title h1{margin:0 0 6px;font-size:28px;letter-spacing:.2px}
+    .title p{margin:0;color:var(--muted);max-width:760px;line-height:1.45}
+    .badges{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.18);
+      border-radius:999px;
+      color:var(--muted);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .badge strong{color:var(--text);font-weight:700}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:10px 14px;border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+      text-decoration:none;
+      transition:transform .08s ease, background .15s ease, border-color .15s ease;
+      font-weight:650;
+    }
+    .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18)}
+    .btn.primary{
+      background:linear-gradient(90deg, rgba(0,255,208,.18), rgba(110,168,255,.16));
+      border-color:rgba(0,255,208,.35);
+    }
+    .grid{
+      margin-top:18px;
+      display:grid;gap:14px;
+      grid-template-columns: 1.1fr .9fr;
+    }
+    @media (max-width: 920px){ .grid{grid-template-columns: 1fr} }
+    .card{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      border-radius:var(--radius);
+      box-shadow:0 10px 35px rgba(0,0,0,.25);
+      padding:18px;
+    }
+    .card h2{margin:0 0 10px;font-size:16px;letter-spacing:.2px}
+    .card p{margin:0 0 10px;color:var(--muted);line-height:1.55}
+    .steps{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+    .step{
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.18);
+      border-radius:14px;
+      padding:12px;
+    }
+    .step .label{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .step .label span{font-size:13px;color:var(--muted)}
+    .chip{
+      font-size:12px;padding:4px 10px;border-radius:999px;
+      border:1px solid rgba(0,255,208,.28);
+      color:rgba(0,255,208,.9);
+      background:rgba(0,255,208,.08);
+    }
+    pre{
+      margin:0;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.28);
+      overflow:auto;
+      font-family:var(--mono);
+      font-size:12.8px;
+      line-height:1.45;
+      color:rgba(255,255,255,.92);
+      position:relative;
+    }
+    .copy{
+      appearance:none;border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:rgba(255,255,255,.88);
+      padding:7px 10px;border-radius:10px;
+      font-weight:650;
+      cursor:pointer;
+      transition:background .15s ease, transform .08s ease, border-color .15s ease;
+      font-size:12px;
+    }
+    .copy:hover{background:rgba(255,255,255,.10);transform:translateY(-1px);border-color:rgba(255,255,255,.22)}
+    .copy:active{transform:translateY(0px)}
+    .note{
+      border:1px dashed rgba(255,255,255,.18);
+      background:rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:12px;
+      color:var(--muted);
+      line-height:1.55;
+    }
+    .kpi{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      margin-top:12px;
+    }
+    @media (max-width: 560px){ .kpi{grid-template-columns: 1fr} }
+    .kpi .box{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:12px;
+    }
+    .kpi .box .big{font-weight:850;font-size:14px}
+    .kpi .box .small{color:var(--muted);font-size:12px;margin-top:4px}
+    footer{
+      margin-top:18px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+      text-align:center;
+    }
+    .hr{height:1px;background:rgba(255,255,255,.10);margin:14px 0}
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="top">
+        <div class="title">
+          <h1>HyperHDR-Termux</h1>
+          <p>Scripts para instalar, compilar e rodar o <strong>HyperHDR no Termux (Android)</strong>. Foco em instalação “do zero” e build confiável no ambiente do Termux.</p>
+          <div class="actions">
+            <a class="btn primary" href="https://github.com/Anderson007s/HyperHDR-Termux" target="_blank" rel="noreferrer">
+              Ver repositório
+            </a>
+            <a class="btn" href="https://github.com/Anderson007s/HyperHDR-Termux/issues" target="_blank" rel="noreferrer">
+              Issues / Suporte
+            </a>
+          </div>
+        </div>
+        <div class="badges">
+          <div class="badge"><strong>Target:</strong> Termux</div>
+          <div class="badge"><strong>Build:</strong> scripts</div>
+          <div class="badge"><strong>Pages:</strong> /docs</div>
+        </div>
+      </div>
 
-  <h1>HyperHDR-Termux</h1>
-  <p>Build oficial para Termux (Android)</p>
+      <div class="grid">
+        <div class="card">
+          <h2>Instalação rápida</h2>
+          <p>Comandos recomendados para instalação limpa. Use exatamente assim no Termux.</p>
 
-  <h2>Instalação</h2>
-  <p>Execute no Termux:</p>
+          <div class="steps">
+            <div class="step">
+              <div class="label">
+                <span>1) Atualizar e instalar git</span>
+                <button class="copy" data-copy="#cmd1">Copiar</button>
+              </div>
+              <pre id="cmd1">pkg update -y &amp;&amp; pkg upgrade -y
+pkg install -y git</pre>
+            </div>
 
-  <pre>
-pkg update -y
-pkg install git -y
-git clone https://github.com/Anderson007s/HyperHDR-Termux.git
-cd HyperHDR-Termux
-bash install-termux.sh
-  </pre>
+            <div class="step">
+              <div class="label">
+                <span>2) Clonar o projeto</span>
+                <button class="copy" data-copy="#cmd2">Copiar</button>
+              </div>
+              <pre id="cmd2">git clone https://github.com/Anderson007s/HyperHDR-Termux.git
+cd HyperHDR-Termux</pre>
+            </div>
 
-  <p>
-    <a href="https://github.com/Anderson007s/HyperHDR-Termux">
-      Ver no GitHub
-    </a>
-  </p>
+            <div class="step">
+              <div class="label">
+                <span>3) Rodar o instalador</span>
+                <div class="chip">recomendado</div>
+              </div>
+              <div class="label" style="margin-top:-4px">
+                <span style="color:transparent">.</span>
+                <button class="copy" data-copy="#cmd3">Copiar</button>
+              </div>
+              <pre id="cmd3">bash install-termux.sh</pre>
+            </div>
+          </div>
 
+          <div class="hr"></div>
+          <div class="note">
+            Dica: se algum pacote falhar por espelho, rode <code>termux-change-repo</code> e selecione um mirror estável.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Build e execução</h2>
+          <p>Após instalar dependências, você pode compilar e rodar usando os scripts.</p>
+
+          <div class="steps">
+            <div class="step">
+              <div class="label">
+                <span>Compilar (release)</span>
+                <button class="copy" data-copy="#cmd4">Copiar</button>
+              </div>
+              <pre id="cmd4">./build.sh</pre>
+            </div>
+
+            <div class="step">
+              <div class="label">
+                <span>Rodar (foreground)</span>
+                <button class="copy" data-copy="#cmd5">Copiar</button>
+              </div>
+              <pre id="cmd5">./run-hyperhdr.sh</pre>
+            </div>
+          </div>
+
+          <div class="kpi">
+            <div class="box">
+              <div class="big">Headless / Termux</div>
+              <div class="small">Foco em rodar bem no Android</div>
+            </div>
+            <div class="box">
+              <div class="big">Scripts prontos</div>
+              <div class="small">Instalação + build automatizados</div>
+            </div>
+            <div class="box">
+              <div class="big">WLED friendly</div>
+              <div class="small">Funciona bem com controle via rede</div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="note">
+            Se o HyperHDR reclamar de bibliotecas no runtime, rode pelo script de execução (ele ajusta o ambiente).
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:14px">
+        <div class="card">
+          <h2>Documentação</h2>
+          <p>Links úteis para o projeto e arquivos importantes.</p>
+          <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.8">
+            <li><a href="https://github.com/Anderson007s/HyperHDR-Termux/blob/main/README.md" target="_blank" rel="noreferrer">README</a></li>
+            <li><a href="https://github.com/Anderson007s/HyperHDR-Termux/blob/main/BUILDING.md" target="_blank" rel="noreferrer">BUILDING</a></li>
+            <li><a href="https://github.com/Anderson007s/HyperHDR-Termux/issues" target="_blank" rel="noreferrer">Abrir issue</a></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>O que este projeto é?</h2>
+          <p>
+            Um conjunto de scripts e ajustes para facilitar o uso do HyperHDR no Termux.
+            Se você quer Ambilight via rede (ex.: WLED) e players compatíveis com captura no Android,
+            este repo ajuda a deixar o ambiente pronto.
+          </p>
+          <div class="note">
+            Observação: apps com DRM (Netflix/Prime/Disney etc) normalmente bloqueiam captura — isso não é limitação do projeto, e sim do Android/DRM.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      © <span id="y"></span> Anderson007s — HyperHDR-Termux • GitHub Pages (/docs)
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    function copyFrom(selector){
+      const el = document.querySelector(selector);
+      if(!el) return false;
+      const text = el.innerText;
+      return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
+    }
+
+    document.querySelectorAll(".copy").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const sel = btn.getAttribute("data-copy");
+        const ok = await copyFrom(sel);
+        const old = btn.textContent;
+        btn.textContent = ok ? "Copiado ✅" : "Falhou ❌";
+        setTimeout(() => btn.textContent = old, 1200);
+      });
+    });
+  </script>
 </body>
 </html>
